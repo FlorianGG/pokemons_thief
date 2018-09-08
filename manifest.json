@@ -1,0 +1,31 @@
+{
+  "manifest_version": 2,
+  "name": "Pokemon's thief",
+  "description": "Create my pokemon database",
+  "version": "1.0",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "http://*/*",
+    "https://*/*",
+    "storage"
+  ],
+  "browser_action": {
+    "default_icon": "img/botPokemon.png",
+    "popup": "js/script.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://www.pokemontrash.com/pokedex/liste-pokemon.php/*"
+      ],
+      "js": [
+        "js/jquery.min.js",
+        "js/script.js"
+      ]
+    }
+  ],
+  "icons": {
+    "128": "img/botPokemon.png"
+  }
+}
