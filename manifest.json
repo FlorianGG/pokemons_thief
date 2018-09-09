@@ -17,7 +17,7 @@
   "content_scripts": [
     {
       "matches": [
-        "http://www.pokemontrash.com/pokedex/liste-pokemon.php/*"
+        "https://www.pokepedia.fr/*"
       ],
       "js": [
         "js/jquery.min.js",
