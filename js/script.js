@@ -3,6 +3,7 @@ $( document ).ready(function() {
   var pokemonTr = body.find('table.tableaustandard.sortable tbody tr:not(:first)');
   var mainUrl = 'https://www.pokepedia.fr';
   var nbPokemons = pokemonTr.length;
+  var miniatureOk = localStorage.getItem('miniature-ok') === null ? false : localStorage.getItem('miniature-ok');;
   var activePokemon = localStorage.getItem('active-pokemon') === null ? 0 : localStorage.getItem('active-pokemon');
   var activePokemonId = localStorage.getItem('active-pokemon-id') === null ? 0 : localStorage.getItem('active-pokemon-id');
   var listPokemon = localStorage.getItem('list-pokemon') === null ? {} : JSON.parse(localStorage.getItem('list-pokemon'));
@@ -26,12 +27,22 @@ $( document ).ready(function() {
     'Ténèbres' : 17,
     'Vol' : 18
   }
-  var listTalents = localStorage.getItem('list-talents') === null ? {} : localStorage.getItem('list-talents');
+  var listTalents = localStorage.getItem('list-talents') === null ? {} : JSON.parse(localStorage.getItem('list-talents'));
   console.log(window.location.href)
   if (window.location.href === mainUrl + '/Liste_des_Pok%C3%A9mon_dans_l%27ordre_du_Pok%C3%A9dex_National') {
-    //start the process
-    getBackPokemonInfo();
+    miniatureOk = true;
+    if (!miniatureOk) {
+      getMiniature();
+    }else{
+      getBackPokemonInfo();
+    }
   }else if(window.location.href === mainUrl + '/Liste_des_talents_par_g%C3%A9n%C3%A9ration') {
+    getBackTalents();
+  }else{
+    getBackPokemonFullInfo();
+  }
+
+  function getBackTalents(){
     var talents = {};
     var index = 1;
     pokemonTr.each(function(){
@@ -39,6 +50,7 @@ $( document ).ready(function() {
       if (tds.eq(0).find('a').text().trim().length > 0) {
         talents[tds.eq(0).find('a').text().trim()] = {
           'id' : index,
+          'french_name' : tds.eq(0).find('a').text().trim(),
           'english_name' : tds.eq(1).text().trim(),
           'fight_effect' : tds.eq(2).text().trim(),
           'ground_effect' : tds.eq(3).text().trim()
@@ -47,18 +59,15 @@ $( document ).ready(function() {
       }
     })
     localStorage.setItem('list-talents', JSON.stringify(talents));
-  }else{
-    getBackPokemonFullInfo();
-  }
-
-  function getBackTalents(){
-
+    activePokemon = 0;
+    localStorage.setItem('active-pokemon', activePokemon);
+    window.location.assign(mainUrl + '/Liste_des_Pok%C3%A9mon_dans_l%27ordre_du_Pok%C3%A9dex_National');
   }
   function getBackPokemonFullInfo(){
     if (typeof listPokemon[activePokemonId] !== 'undefined') {
       //on télécharge le cri et l'image
-      //getImageAndSound();
-      $('.ficheinfo tr').each(function(){
+      getImageAndSound();
+/*       $('.ficheinfo tr').each(function(){
         var tr = $(this);
         //on s'occupe des types
         if (tr.find('th a').text().trim() == 'Types') {
@@ -77,33 +86,103 @@ $( document ).ready(function() {
         //on s'occupe de la taille
         if (tr.find('th a').text().trim() == 'Taille') {
           tr.find('td:first').each(function(){
-            listPokemon[activePokemonId].size= $(this).text().trim();
+            var sizes = $(this).text().trim().match(/([0-9]\,[0-9])/g);
+            if (sizes.length > 0) {
+              listPokemon[activePokemonId].size = {
+                'french_size' : parseFloat(sizes[0].replace(/\,/, '.')),
+                'english_size' : parseFloat(sizes[1].replace(/\,/, '.'))
+              }
+            }
           });
         }
+        //on s'occupe du poids
+        if (tr.find('th a').text().trim() == 'Poids') {
+          tr.find('td:first').each(function(){
+            var weights = $(this).text().trim().match(/([0-9]\,[0-9])/g);
+            if (weights.length > 0) {
+              listPokemon[activePokemonId].weight = {
+                'french_weight' : parseFloat(weights[0].replace(/\,/, '.')),
+                'english_weight' : parseFloat(weights[1].replace(/\,/, '.'))
+              }
+            }
+          });
+        }
+        //on s'occupe des talents
+        if (tr.find('th a').text().trim() == 'Talents') {
+          var talents = [];
+          tr.find('td > a').each(function(){
+            var talent = $(this).text().trim();
+            talents.push(listTalents[talent].id);
+          });
+          listPokemon[activePokemonId].talents = talents;
+        }
+        //on s'occupe du sexe
+        if (tr.find('th a').text().trim() == 'Sexe') {
+          var sexe = {
+            'female' : 0,
+            'male' : 0,
+            'asexual' : false
+          };
+          tr.find('td:first').each(function(){
+            var sexeInfo = $(this).text().trim();
+            if (sexeInfo == 'Asexué') {
+              sexe.asexual = true;
+            }else{
+              var sexes = $(this).text().trim().match(/([0-9\,\.]+)\%/g);
+              sexe = {
+                'female' : parseFloat(sexes[0].replace(/\,/, '.')),
+                'male' : parseFloat(sexes[1].replace(/\,/, '.'))
+              };
+            }
+          });
+          listPokemon[activePokemonId].sex = sexe;
+        }
       });
-      localStorage.setItem('list-pokemon', JSON.stringify(listPokemon));
+      localStorage.setItem('list-pokemon', JSON.stringify(listPokemon));*/
+
+      //go to the pokemons list page
+      activePokemon++;
+      localStorage.setItem('active-pokemon', activePokemon);
+      window.location.assign(mainUrl + '/Liste_des_Pok%C3%A9mon_dans_l%27ordre_du_Pok%C3%A9dex_National');
+
+
     }
   }
   function getBackPokemonInfo(){
-    console.log(pokemonTr[activePokemon])
+/*     if (activePokemon === false) {
+      window.location.assign(mainUrl + '/Liste_des_talents_par_g%C3%A9n%C3%A9ration');
+    } */
     if (activePokemon < nbPokemons) {
       if (typeof pokemonTr[activePokemon] !== 'undefined') {
         var tds = $(pokemonTr[activePokemon]).find('td');
-        activePokemonId = tds.eq(0).html().trim();
-        var pokemon = {
-          'id': activePokemonId,
-          'french_name': tds.eq(2).find('a').attr('title'),
-          'english_name': tds.eq(3).find('a').attr('title').replace(/en\:/,''),
-          'german_name' : tds.eq(4).find('a').attr('title').replace(/de\:/,'')
+        if (typeof tds.eq(0).html() !== 'undefined') {
+          activePokemonId = tds.eq(0).html().trim();
+          var pokemon = {
+            'id': activePokemonId,
+            'french_name': tds.eq(2).find('a').attr('title'),
+            'english_name': tds.eq(3).find('a').attr('title').replace(/en\:/,''),
+            'german_name' : tds.eq(4).find('a').attr('title').replace(/de\:/,'')
+          }
+          listPokemon[activePokemonId] = pokemon;
+          //on set les infos dans le local storage
+          localStorage.setItem('list-pokemon', JSON.stringify(listPokemon));
+          localStorage.setItem('active-pokemon-id', activePokemonId);
+
+          //go to the pokemon active page
+          var missingPokemons = [80,170,188,191,194,205,225,277,281,284,286,359,381,413,439,464,469,482,497,513,527,554,563,567,585,626,634,659,665,702,706,709,715,725,733,738,750]
+          console.log(missingPokemons.indexOf(activePokemonId), activePokemonId)
+          if (missingPokemons.indexOf(parseInt(activePokemonId)) > -1) {
+            window.location.assign(mainUrl + '/' + pokemon.french_name)
+          }else{
+            activePokemon++
+            localStorage.setItem('active-pokemon', activePokemon);
+            getBackPokemonInfo();
+          }
+        }else{
+          activePokemon++
+          localStorage.setItem('active-pokemon', activePokemon);
+          getBackPokemonInfo();
         }
-        listPokemon[activePokemonId] = pokemon;
-        //on set les infos dans le local storage
-        localStorage.setItem('list-pokemon', JSON.stringify(listPokemon));
-        localStorage.setItem('active-pokemon-id', activePokemonId);
-
-        //go to the pokemon active page
-        window.location.assign(mainUrl + '/' + pokemon.french_name)
-
       }
     }
   }
@@ -130,6 +209,8 @@ $( document ).ready(function() {
    * Function in charge to get back the pokemon's miniatures
    */
   function getMiniature() {
+    localStorage.setItem('miniature-ok', true)
+    window.location.reload();
     var containerLinks = '<div class="containerLinks">';
     pokemonTr.each(function(){
       var tds = $(this).find('td');
@@ -156,6 +237,8 @@ $( document ).ready(function() {
       }else{
           clearTimeout(t);
           body.find('.containerLinks').remove();
+          localStorage.setItem('miniature-ok', true)
+          window.location.reload()
       }
     }
     clickLink();
